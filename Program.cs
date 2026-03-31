@@ -18,18 +18,12 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-//First  Endpoints
-//app.MapGet("/hello/{id:int}", (int id) =>
-//{
-//    //return "Hello World!";
-//    //return Results.BadRequest("error generado en ejecuación");
-//    return Results.Ok("El id es: " + id);
-//}).WithOpenApi();
-//app.MapPost("/echo", (string message) => message).WithOpenApi();
-
-//Obtener todas las propiedades -GET -MapGet
-app.MapGet("/api/propiedades", () =>
-{
+//Obtener todas las propiedades -GET- MapGet , se inyecta el logger para mostrar un mensaje en la consola cada vez que se accede a esta ruta
+app.MapGet("/api/propiedades", (ILogger<Program> logger) =>
+{ 
+    //usar el logger que ya está como inyección de dependencias
+    //para mostrar un mensaje en la consola cada vez que se accede a esta ruta
+    logger.LogInformation("Se ha accedido a la ruta /api/propiedades para obtener todas las propiedades.");
     return Results.Ok(DatosPropiedad.ListaPropiedades);
 }).WithOpenApi();
 
