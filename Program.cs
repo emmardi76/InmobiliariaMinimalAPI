@@ -25,9 +25,16 @@ if (app.Environment.IsDevelopment())
 //}).WithOpenApi();
 //app.MapPost("/echo", (string message) => message).WithOpenApi();
 
+//Obtener todas las propiedades -GET -MapGet
 app.MapGet("/api/propiedades", () =>
 {
     return Results.Ok(DatoaPropiedad.ListaPropiedades);
+}).WithOpenApi();
+
+//Obtener ropiedad individual -GET-M apGet
+app.MapGet("/api/propiedades/{id:int}", (int id) =>
+{
+    return Results.Ok(DatoaPropiedad.ListaPropiedades.FirstOrDefault(p => p.IdPropiedad == id));
 }).WithOpenApi();
 
 app.UseHttpsRedirection();
