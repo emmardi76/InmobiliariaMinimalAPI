@@ -1,5 +1,6 @@
 using InmobiliariaMinimalAPI.Datos;
 using InmobiliariaMinimalAPI.Modelos;
+using InmobiliariaMinimalAPI.Modelos.DTOS;
 using Microsoft.AspNetCore.Mvc;
 using Scalar.AspNetCore;
 
@@ -37,26 +38,44 @@ app.MapGet("/api/propiedades/{id:int}", (int id) =>
 }).WithName("ObtenerPropiedad").Produces<Propiedad>(200).WithOpenApi();
 
 //Agregar nueva propiedad -POST- MapPost
-app.MapPost("/api/propiedades", ([FromBody]Propiedad propiedad) =>
+app.MapPost("/api/propiedades", ([FromBody] CrearPropiedadDTO crearPropiedadDto) =>
 {
     //Validar que el id de propiedad y que el nombre no esté vacio
-    if (propiedad.IdPropiedad != 0 || string.IsNullOrEmpty(propiedad.Nombre))
+    if (string.IsNullOrEmpty(crearPropiedadDto.Nombre))
     {
         return Results.BadRequest("El id de la propiedad no es correcto o el nombre está vacío.");
     }
 
     //Validar si el nombre de la propiedad ya existe en la lista
-    if (DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.Nombre.ToLower() == propiedad.Nombre.ToLower()) != null)
+    if (DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.Nombre.ToLower() == crearPropiedadDto.Nombre.ToLower()) != null)
     {
         return Results.BadRequest("El nombre de la propiedad ya existe.");
     }
 
-    propiedad.IdPropiedad = DatosPropiedad.ListaPropiedades.Count > 0 ? DatosPropiedad.ListaPropiedades.Max(p => p.IdPropiedad) + 1 : 1;
+    Propiedad propiedad = new Propiedad
+    {
+        Nombre = crearPropiedadDto.Nombre,
+        Descripcion = crearPropiedadDto.Descripcion,
+        Ubicacion = crearPropiedadDto.Ubicacion,
+        Activa = crearPropiedadDto.Activa
+    };
+
+    propiedad.IdPropiedad = DatosPropiedad.ListaPropiedades.OrderByDescending
+    (p => p.IdPropiedad).FirstOrDefault()?.IdPropiedad + 1 ?? 1;
     DatosPropiedad.ListaPropiedades.Add(propiedad);
     //return Results.Ok(DatosPropiedad.ListaPropiedades);
     //return Results.Created($"/api/propiedades/{propiedad.IdPropiedad}", propiedad);
-    return Results.CreatedAtRoute("ObtenerPropiedad", new { id=propiedad.IdPropiedad}, propiedad);
-}).WithName("CrearPropiedad").Accepts<Propiedad>("application/json").Produces<Propiedad>(201).Produces(400).WithOpenApi();
+
+    PropiedadDTO propiedadDTO = new PropiedadDTO
+    {
+        IdPropiedad = propiedad.IdPropiedad,
+        Nombre = propiedad.Nombre,
+        Descripcion = propiedad.Descripcion,
+        Ubicacion = propiedad.Ubicacion,
+        Activa = propiedad.Activa
+    };
+    return Results.CreatedAtRoute("ObtenerPropiedad", new { id=propiedad.IdPropiedad}, propiedadDTO);
+}).WithName("CrearPropiedad").Accepts<CrearPropiedadDTO>("application/json").Produces<PropiedadDTO>(201).Produces(400).WithOpenApi();
 
 app.UseHttpsRedirection();
 
