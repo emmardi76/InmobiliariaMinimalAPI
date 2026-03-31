@@ -56,7 +56,7 @@ app.MapPost("/api/propiedades", ([FromBody]Propiedad propiedad) =>
     //return Results.Ok(DatosPropiedad.ListaPropiedades);
     //return Results.Created($"/api/propiedades/{propiedad.IdPropiedad}", propiedad);
     return Results.CreatedAtRoute("ObtenerPropiedad", new { id=propiedad.IdPropiedad}, propiedad);
-}).WithName("CrearPropiedad").Produces<Propiedad>(201).Produces(400).WithOpenApi();
+}).WithName("CrearPropiedad").Accepts<Propiedad>("application/json").Produces<Propiedad>(201).Produces(400).WithOpenApi();
 
 app.UseHttpsRedirection();
 
