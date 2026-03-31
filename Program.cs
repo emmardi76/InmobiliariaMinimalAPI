@@ -28,13 +28,13 @@ app.MapGet("/api/propiedades", (ILogger<Program> logger) =>
     //para mostrar un mensaje en la consola cada vez que se accede a esta ruta
     logger.LogInformation("Se ha accedido a la ruta /api/propiedades para obtener todas las propiedades.");
     return Results.Ok(DatosPropiedad.ListaPropiedades);
-}).WithName("ObtenerPropiedades").WithOpenApi();
+}).WithName("ObtenerPropiedades").Produces<IEnumerable<Propiedad>>(200).WithOpenApi();
 
 //Obtener propiedad individual -GET- MapGet
 app.MapGet("/api/propiedades/{id:int}", (int id) =>
 {
     return Results.Ok(DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.IdPropiedad == id));
-}).WithName("ObtenerPropiedad").WithOpenApi();
+}).WithName("ObtenerPropiedad").Produces<Propiedad>(200).WithOpenApi();
 
 //Agregar nueva propiedad -POST- MapPost
 app.MapPost("/api/propiedades", ([FromBody]Propiedad propiedad) =>
@@ -56,7 +56,7 @@ app.MapPost("/api/propiedades", ([FromBody]Propiedad propiedad) =>
     //return Results.Ok(DatosPropiedad.ListaPropiedades);
     //return Results.Created($"/api/propiedades/{propiedad.IdPropiedad}", propiedad);
     return Results.CreatedAtRoute("ObtenerPropiedad", new { id=propiedad.IdPropiedad}, propiedad);
-}).WithName("CrearPropiedad").WithOpenApi();
+}).WithName("CrearPropiedad").Produces<Propiedad>(201).Produces(400).WithOpenApi();
 
 app.UseHttpsRedirection();
 
