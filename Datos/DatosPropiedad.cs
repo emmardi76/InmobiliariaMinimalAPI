@@ -2,7 +2,7 @@
 
 namespace InmobiliariaMinimalAPI.Datos;
 
-public static class DatoaPropiedad
+public static class DatosPropiedad
 {
     public static List<Propiedad> ListaPropiedades { get; set; } =
     [

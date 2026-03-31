@@ -1,4 +1,6 @@
 using InmobiliariaMinimalAPI.Datos;
+using InmobiliariaMinimalAPI.Modelos;
+using Microsoft.AspNetCore.Mvc;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,13 +30,33 @@ if (app.Environment.IsDevelopment())
 //Obtener todas las propiedades -GET -MapGet
 app.MapGet("/api/propiedades", () =>
 {
-    return Results.Ok(DatoaPropiedad.ListaPropiedades);
+    return Results.Ok(DatosPropiedad.ListaPropiedades);
 }).WithOpenApi();
 
-//Obtener propiedad individual -GET-M apGet
+//Obtener propiedad individual -GET- MapGet
 app.MapGet("/api/propiedades/{id:int}", (int id) =>
 {
-    return Results.Ok(DatoaPropiedad.ListaPropiedades.FirstOrDefault(p => p.IdPropiedad == id));
+    return Results.Ok(DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.IdPropiedad == id));
+}).WithOpenApi();
+
+//Agregar nueva propiedad -POST- MapPost
+app.MapPost("/api/propiedades", ([FromBody]Propiedad propiedad) =>
+{
+    //Validar que el id de propiedad y que el nombre no esté vacio
+    if (propiedad.IdPropiedad != 0 || string.IsNullOrEmpty(propiedad.Nombre))
+    {
+        return Results.BadRequest("El id de la propiedad no es correcto o el nombre está vacío.");
+    }
+
+    //Validar si el nombre de la propiedad ya existe en la lista
+    if (DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.Nombre.ToLower() == propiedad.Nombre.ToLower()) != null)
+    {
+        return Results.BadRequest("El nombre de la propiedad ya existe.");
+    }
+
+    propiedad.IdPropiedad = DatosPropiedad.ListaPropiedades.Count > 0 ? DatosPropiedad.ListaPropiedades.Max(p => p.IdPropiedad) + 1 : 1;
+    DatosPropiedad.ListaPropiedades.Add(propiedad);
+    return Results.Ok(DatosPropiedad.ListaPropiedades);
 }).WithOpenApi();
 
 app.UseHttpsRedirection();
