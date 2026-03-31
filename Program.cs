@@ -18,20 +18,23 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-//Obtener todas las propiedades -GET- MapGet , se inyecta el logger para mostrar un mensaje en la consola cada vez que se accede a esta ruta
+//Obtener todas las propiedades -GET- MapGet ,
+//se inyecta el logger (ejemplo de inyeccion de dependencias con minimal APi,
+//si fuera un servicio personalizado habría que añadirlo previmente en la sección add services to container)
+//para mostrar un mensaje en la consola cada vez que se accede a esta ruta
 app.MapGet("/api/propiedades", (ILogger<Program> logger) =>
 { 
     //usar el logger que ya está como inyección de dependencias
     //para mostrar un mensaje en la consola cada vez que se accede a esta ruta
     logger.LogInformation("Se ha accedido a la ruta /api/propiedades para obtener todas las propiedades.");
     return Results.Ok(DatosPropiedad.ListaPropiedades);
-}).WithOpenApi();
+}).WithName("ObtenerPropiedades").WithOpenApi();
 
 //Obtener propiedad individual -GET- MapGet
 app.MapGet("/api/propiedades/{id:int}", (int id) =>
 {
     return Results.Ok(DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.IdPropiedad == id));
-}).WithOpenApi();
+}).WithName("ObtenerPropiedad").WithOpenApi();
 
 //Agregar nueva propiedad -POST- MapPost
 app.MapPost("/api/propiedades", ([FromBody]Propiedad propiedad) =>
@@ -50,8 +53,10 @@ app.MapPost("/api/propiedades", ([FromBody]Propiedad propiedad) =>
 
     propiedad.IdPropiedad = DatosPropiedad.ListaPropiedades.Count > 0 ? DatosPropiedad.ListaPropiedades.Max(p => p.IdPropiedad) + 1 : 1;
     DatosPropiedad.ListaPropiedades.Add(propiedad);
-    return Results.Ok(DatosPropiedad.ListaPropiedades);
-}).WithOpenApi();
+    //return Results.Ok(DatosPropiedad.ListaPropiedades);
+    //return Results.Created($"/api/propiedades/{propiedad.IdPropiedad}", propiedad);
+    return Results.CreatedAtRoute("ObtenerPropiedad", new { id=propiedad.IdPropiedad}, propiedad);
+}).WithName("CrearPropiedad").WithOpenApi();
 
 app.UseHttpsRedirection();
 
