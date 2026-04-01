@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using InmobiliariaMinimalAPI.Mapper;
 using Scalar.AspNetCore;
 using AutoMapper;
+using FluentValidation;
+using InmobiliariaMinimalAPI.Validaciones;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,9 @@ builder.Services.AddOpenApi();
 
 //Configurar AutoMapper
 builder.Services.AddAutoMapper(typeof(ConfiguracionDeMapper));
+
+//Configurar validaciones con FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<ValidacionCrearPropiedad>();
 
 var app = builder.Build();
 
@@ -43,12 +48,15 @@ app.MapGet("/api/propiedades/{id:int}", (int id) =>
 }).WithName("ObtenerPropiedad").Produces<Propiedad>(200).WithOpenApi();
 
 //Agregar nueva propiedad -POST- MapPost
-app.MapPost("/api/propiedades", (IMapper _mapper, [FromBody] CrearPropiedadDTO crearPropiedadDto) =>
+app.MapPost("/api/propiedades", async (IMapper _mapper,
+    IValidator<CrearPropiedadDTO> _validator, [FromBody] CrearPropiedadDTO crearPropiedadDto) =>
 {
+    var resultadoValidaciones = await _validator.ValidateAsync(crearPropiedadDto);
+   
     //Validar que el id de propiedad y que el nombre no esté vacio
-    if (string.IsNullOrEmpty(crearPropiedadDto.Nombre))
+    if (resultadoValidaciones.IsValid)
     {
-        return Results.BadRequest("El id de la propiedad no es correcto o el nombre está vacío.");
+        return Results.BadRequest(resultadoValidaciones.Errors.FirstOrDefault().ToString());
     }
 
     //Validar si el nombre de la propiedad ya existe en la lista
