@@ -54,7 +54,7 @@ app.MapPost("/api/propiedades", async (IMapper _mapper,
     var resultadoValidaciones = await _validator.ValidateAsync(crearPropiedadDto);
    
     //Validar que el id de propiedad y que el nombre no esté vacio
-    if (resultadoValidaciones.IsValid)
+    if (!resultadoValidaciones.IsValid)
     {
         return Results.BadRequest(resultadoValidaciones.Errors.FirstOrDefault().ToString());
     }
