@@ -1,14 +1,19 @@
-using InmobiliariaMinimalAPI.Datos;
 using InmobiliariaMinimalAPI.Modelos;
+using InmobiliariaMinimalAPI.Datos;
 using InmobiliariaMinimalAPI.Modelos.DTOS;
 using Microsoft.AspNetCore.Mvc;
+using InmobiliariaMinimalAPI.Mapper;
 using Scalar.AspNetCore;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+//Configurar AutoMapper
+builder.Services.AddAutoMapper(typeof(ConfiguracionDeMapper));
 
 var app = builder.Build();
 
@@ -38,7 +43,7 @@ app.MapGet("/api/propiedades/{id:int}", (int id) =>
 }).WithName("ObtenerPropiedad").Produces<Propiedad>(200).WithOpenApi();
 
 //Agregar nueva propiedad -POST- MapPost
-app.MapPost("/api/propiedades", ([FromBody] CrearPropiedadDTO crearPropiedadDto) =>
+app.MapPost("/api/propiedades", (IMapper _mapper, [FromBody] CrearPropiedadDTO crearPropiedadDto) =>
 {
     //Validar que el id de propiedad y que el nombre no esté vacio
     if (string.IsNullOrEmpty(crearPropiedadDto.Nombre))
@@ -52,13 +57,15 @@ app.MapPost("/api/propiedades", ([FromBody] CrearPropiedadDTO crearPropiedadDto)
         return Results.BadRequest("El nombre de la propiedad ya existe.");
     }
 
-    Propiedad propiedad = new Propiedad
-    {
-        Nombre = crearPropiedadDto.Nombre,
-        Descripcion = crearPropiedadDto.Descripcion,
-        Ubicacion = crearPropiedadDto.Ubicacion,
-        Activa = crearPropiedadDto.Activa
-    };
+    //Propiedad propiedad = new Propiedad
+    //{
+    //    Nombre = crearPropiedadDto.Nombre,
+    //    Descripcion = crearPropiedadDto.Descripcion,
+    //    Ubicacion = crearPropiedadDto.Ubicacion,
+    //    Activa = crearPropiedadDto.Activa
+    //};
+
+    Propiedad propiedad = _mapper.Map<Propiedad>(crearPropiedadDto);
 
     propiedad.IdPropiedad = DatosPropiedad.ListaPropiedades.OrderByDescending
     (p => p.IdPropiedad).FirstOrDefault()?.IdPropiedad + 1 ?? 1;
@@ -66,19 +73,25 @@ app.MapPost("/api/propiedades", ([FromBody] CrearPropiedadDTO crearPropiedadDto)
     //return Results.Ok(DatosPropiedad.ListaPropiedades);
     //return Results.Created($"/api/propiedades/{propiedad.IdPropiedad}", propiedad);
 
-    PropiedadDTO propiedadDTO = new PropiedadDTO
-    {
-        IdPropiedad = propiedad.IdPropiedad,
-        Nombre = propiedad.Nombre,
-        Descripcion = propiedad.Descripcion,
-        Ubicacion = propiedad.Ubicacion,
-        Activa = propiedad.Activa
-    };
+    //PropiedadDTO propiedadDTO = new PropiedadDTO
+    //{
+    //    IdPropiedad = propiedad.IdPropiedad,
+    //    Nombre = propiedad.Nombre,
+    //    Descripcion = propiedad.Descripcion,
+    //    Ubicacion = propiedad.Ubicacion,
+    //    Activa = propiedad.Activa
+    //};
+
+    PropiedadDTO propiedadDTO = _mapper.Map<PropiedadDTO>(propiedad);
+
     return Results.CreatedAtRoute("ObtenerPropiedad", new { id=propiedad.IdPropiedad}, propiedadDTO);
 }).WithName("CrearPropiedad").Accepts<CrearPropiedadDTO>("application/json").Produces<PropiedadDTO>(201).Produces(400).WithOpenApi();
 
 app.UseHttpsRedirection();
 
 app.Run();
+
+
+
 
 
