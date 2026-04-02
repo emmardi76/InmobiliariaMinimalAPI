@@ -88,9 +88,7 @@ app.MapPost("/api/propiedades", async (IMapper _mapper,
     DatosPropiedad.ListaPropiedades.Add(propiedad);    
 
     PropiedadDTO propiedadDTO = _mapper.Map<PropiedadDTO>(propiedad);
-
-    //return Results.CreatedAtRoute("ObtenerPropiedad", new { id=propiedad.IdPropiedad}, propiedadDTO);
-
+        
     respuesta.Resultado = propiedadDTO;
     respuesta.Success = true;
     respuesta.CodigoDeEstado = HttpStatusCode.Created;
