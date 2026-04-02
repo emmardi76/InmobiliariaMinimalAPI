@@ -6,10 +6,10 @@ public class RespuestasAPI
 {
     public RespuestasAPI()
     {
-        Errores = new List<string>();
+        Errores = [];
     }
     public bool Success { get; set; }
     public Object Resultado { get; set; }
     public HttpStatusCode CodigoDeEstado { get; set; }
-    public List<string> Errores { get; set; } = new List<string>();
+    public List<string> Errores { get; set; } = [];
 }
