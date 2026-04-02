@@ -46,7 +46,6 @@ app.MapGet("/api/propiedades", async (ApplicationDbContext _context ,ILogger<Pro
     //para mostrar un mensaje en la consola cada vez que se accede a esta ruta
     logger.LogInformation("Se ha accedido a la ruta /api/propiedades para obtener todas las propiedades.");
 
-    //respuesta.Resultado = DatosPropiedad.ListaPropiedades;
     respuesta.Resultado =  _context.Propiedad;
     respuesta.Success = true;
     respuesta.CodigoDeEstado = HttpStatusCode.OK;
@@ -57,8 +56,7 @@ app.MapGet("/api/propiedades", async (ApplicationDbContext _context ,ILogger<Pro
 app.MapGet("/api/propiedades/{id:int}", async (ApplicationDbContext _context,int id) =>
 {
     RespuestasAPI respuesta = new();
-
-    //respuesta.Resultado = DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.IdPropiedad == id);
+        
     respuesta.Resultado = await _context.Propiedad.FirstOrDefaultAsync(p => p.IdPropiedad == id);
     respuesta.Success = true;
     respuesta.CodigoDeEstado = HttpStatusCode.OK;
@@ -103,7 +101,7 @@ app.MapPost("/api/propiedades", async (ApplicationDbContext _context, IMapper _m
 }).WithName("CrearPropiedad").Accepts<CrearPropiedadDTO>("application/json").Produces<RespuestasAPI>(201).Produces(400).WithOpenApi();
 
 //Actualizar una propiedad -PUT- MapPut
-app.MapPut("/api/propiedades", async (IMapper _mapper,
+app.MapPut("/api/propiedades", async (ApplicationDbContext _context, IMapper _mapper,
     IValidator<ActualizarPropiedadDTO> _validator, [FromBody] ActualizarPropiedadDTO actualizarPropiedadDto) =>
 {
     RespuestasAPI respuesta = new() { Success = false, CodigoDeEstado = HttpStatusCode.BadRequest };
@@ -116,13 +114,15 @@ app.MapPut("/api/propiedades", async (IMapper _mapper,
         return Results.BadRequest(respuesta);
     }   
 
-    Propiedad propiedadDesdeBD = DatosPropiedad.ListaPropiedades.FirstOrDefault
+    Propiedad propiedadDesdeBD = await _context.Propiedad.FirstOrDefaultAsync
     (p => p.IdPropiedad == actualizarPropiedadDto.IdPropiedad);
     propiedadDesdeBD.Nombre = actualizarPropiedadDto.Nombre;
     propiedadDesdeBD.Descripcion = actualizarPropiedadDto.Descripcion;
     propiedadDesdeBD.Ubicacion = actualizarPropiedadDto.Ubicacion;
     propiedadDesdeBD.Activa = actualizarPropiedadDto.Activa;
-     
+
+    await _context.SaveChangesAsync();
+
     respuesta.Resultado = _mapper.Map<PropiedadDTO>(propiedadDesdeBD);
     respuesta.Success = true;
     respuesta.CodigoDeEstado = HttpStatusCode.OK;
@@ -131,17 +131,19 @@ app.MapPut("/api/propiedades", async (IMapper _mapper,
 }).WithName("ActualizarPropiedad").Accepts<ActualizarPropiedadDTO>("application/json").Produces<RespuestasAPI>(200).Produces(400).WithOpenApi();
 
 //Eliminar una propiedad -DELETE- MapDelete
-app.MapDelete("/api/propiedades/{id:int}", (int id) =>
+app.MapDelete("/api/propiedades/{id:int}", async (ApplicationDbContext _context, int id) =>
 {
     RespuestasAPI respuesta = new() { Success = false, CodigoDeEstado = HttpStatusCode.BadRequest };
 
     //Obtener el id de la propiead que se quiere eliminar, si no existe devolver un error
-    Propiedad propiedadDesdeBD = DatosPropiedad.ListaPropiedades.FirstOrDefault
+    Propiedad propiedadDesdeBD = await _context.Propiedad.FirstOrDefaultAsync
      (p => p.IdPropiedad == id);
 
     if (propiedadDesdeBD != null)
     {
-        DatosPropiedad.ListaPropiedades.Remove(propiedadDesdeBD);
+        _context.Propiedad.Remove(propiedadDesdeBD);
+        await _context.SaveChangesAsync();
+
         respuesta.Success = true;
         respuesta.CodigoDeEstado = HttpStatusCode.NoContent;
         return Results.Ok(respuesta);
