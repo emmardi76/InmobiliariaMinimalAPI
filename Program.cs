@@ -39,25 +39,27 @@ if (app.Environment.IsDevelopment())
 //se inyecta el logger (ejemplo de inyeccion de dependencias con minimal APi,
 //si fuera un servicio personalizado habría que añadirlo previmente en la sección add services to container)
 //para mostrar un mensaje en la consola cada vez que se accede a esta ruta
-app.MapGet("/api/propiedades", (ILogger<Program> logger) =>
+app.MapGet("/api/propiedades", async (ApplicationDbContext _context ,ILogger<Program> logger) =>
 {
     RespuestasAPI respuesta = new();   
     //usar el logger que ya está como inyección de dependencias
     //para mostrar un mensaje en la consola cada vez que se accede a esta ruta
     logger.LogInformation("Se ha accedido a la ruta /api/propiedades para obtener todas las propiedades.");
 
-    respuesta.Resultado = DatosPropiedad.ListaPropiedades;
+    //respuesta.Resultado = DatosPropiedad.ListaPropiedades;
+    respuesta.Resultado =  _context.Propiedad;
     respuesta.Success = true;
     respuesta.CodigoDeEstado = HttpStatusCode.OK;
     return Results.Ok(respuesta);
 }).WithName("ObtenerPropiedades").Produces<RespuestasAPI>(200).WithOpenApi();
 
 //Obtener propiedad individual -GET- MapGet
-app.MapGet("/api/propiedades/{id:int}", (int id) =>
+app.MapGet("/api/propiedades/{id:int}", async (ApplicationDbContext _context,int id) =>
 {
     RespuestasAPI respuesta = new();
 
-    respuesta.Resultado = DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.IdPropiedad == id);
+    //respuesta.Resultado = DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.IdPropiedad == id);
+    respuesta.Resultado = await _context.Propiedad.FirstOrDefaultAsync(p => p.IdPropiedad == id);
     respuesta.Success = true;
     respuesta.CodigoDeEstado = HttpStatusCode.OK;
     return Results.Ok(respuesta);
@@ -65,7 +67,7 @@ app.MapGet("/api/propiedades/{id:int}", (int id) =>
 }).WithName("ObtenerPropiedad").Produces<RespuestasAPI>(200).WithOpenApi();
 
 //Agregar nueva propiedad -POST- MapPost
-app.MapPost("/api/propiedades", async (IMapper _mapper,
+app.MapPost("/api/propiedades", async (ApplicationDbContext _context, IMapper _mapper,
     IValidator<CrearPropiedadDTO> _validator, [FromBody] CrearPropiedadDTO crearPropiedadDto) =>
 {
     RespuestasAPI respuesta = new() { Success = false,CodigoDeEstado = HttpStatusCode.BadRequest};
@@ -80,17 +82,16 @@ app.MapPost("/api/propiedades", async (IMapper _mapper,
     }
 
     //Validar si el nombre de la propiedad ya existe en la lista
-    if (DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.Nombre.ToLower() == crearPropiedadDto.Nombre.ToLower()) != null)
+    if (await _context.Propiedad.FirstOrDefaultAsync(p => p.Nombre.ToLower() == crearPropiedadDto.Nombre.ToLower()) != null)
     {
         respuesta.Errores.Add("El nombre de la propiedad ya existe.");
         return Results.BadRequest(respuesta);
     }
      
     Propiedad propiedad = _mapper.Map<Propiedad>(crearPropiedadDto);
-
-    propiedad.IdPropiedad = DatosPropiedad.ListaPropiedades.OrderByDescending
-    (p => p.IdPropiedad).FirstOrDefault()?.IdPropiedad + 1 ?? 1;
-    DatosPropiedad.ListaPropiedades.Add(propiedad);    
+   
+    await _context.Propiedad.AddAsync(propiedad);
+    await _context.SaveChangesAsync();
 
     PropiedadDTO propiedadDTO = _mapper.Map<PropiedadDTO>(propiedad);
         
