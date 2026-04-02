@@ -37,6 +37,6 @@ public static class DatosPropiedad
                 Ubicacion = "Barrio Residencial 321",
                 Activa = true,
                 FechaCreacion = DateTime.Now.AddDays(-10)
-        }
+        } 
     ];
 }
