@@ -96,6 +96,33 @@ app.MapPost("/api/propiedades", async (IMapper _mapper,
 
 }).WithName("CrearPropiedad").Accepts<CrearPropiedadDTO>("application/json").Produces<RespuestasAPI>(201).Produces(400).WithOpenApi();
 
+//Actualizar una propiedad -PUT- MapPut
+app.MapPut("/api/propiedades", async (IMapper _mapper,
+    IValidator<ActualizarPropiedadDTO> _validator, [FromBody] ActualizarPropiedadDTO actualizarPropiedadDto) =>
+{
+    RespuestasAPI respuesta = new() { Success = false, CodigoDeEstado = HttpStatusCode.BadRequest };
+
+    var resultadoValidaciones = await _validator.ValidateAsync(actualizarPropiedadDto);
+    //Validar que el id de propiedad y que el nombre no esté vacio
+    if (!resultadoValidaciones.IsValid)
+    {
+        respuesta.Errores.Add(resultadoValidaciones.Errors.FirstOrDefault().ToString());
+        return Results.BadRequest(respuesta);
+    }   
+
+    Propiedad propiedadDesdeBD = DatosPropiedad.ListaPropiedades.FirstOrDefault
+    (p => p.IdPropiedad == actualizarPropiedadDto.IdPropiedad);
+    propiedadDesdeBD.Nombre = actualizarPropiedadDto.Nombre;
+    propiedadDesdeBD.Descripcion = actualizarPropiedadDto.Descripcion;
+    propiedadDesdeBD.Ubicacion = actualizarPropiedadDto.Ubicacion;
+    propiedadDesdeBD.Activa = actualizarPropiedadDto.Activa;
+     
+    respuesta.Resultado = _mapper.Map<PropiedadDTO>(propiedadDesdeBD);
+    respuesta.Success = true;
+    respuesta.CodigoDeEstado = HttpStatusCode.OK;
+    return Results.Ok(respuesta);
+
+}).WithName("ActualizarPropiedad").Accepts<ActualizarPropiedadDTO>("application/json").Produces<RespuestasAPI>(200).Produces(400).WithOpenApi();
 app.UseHttpsRedirection();
 
 app.Run();
