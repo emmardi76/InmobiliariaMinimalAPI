@@ -53,16 +53,24 @@ app.MapGet("/api/propiedades", async (ApplicationDbContext _context ,ILogger<Pro
 }).WithName("ObtenerPropiedades").Produces<RespuestasAPI>(200).WithOpenApi();
 
 //Obtener propiedad individual -GET- MapGet
-app.MapGet("/api/propiedades/{id:int}", async (ApplicationDbContext _context,int id) =>
+app.MapGet("/api/propiedades/{id:int}", async (ApplicationDbContext _context, int id) =>
 {
-    RespuestasAPI respuesta = new();
-        
-    respuesta.Resultado = await _context.Propiedad.FirstOrDefaultAsync(p => p.IdPropiedad == id);
+    RespuestasAPI respuesta = new() { Success = false, CodigoDeEstado = HttpStatusCode.BadRequest };
+
+    var propiedad = await _context.Propiedad.FirstOrDefaultAsync(p => p.IdPropiedad == id);
+    
+    if (propiedad == null)
+    {
+        respuesta.Errores.Add($"El ID de la propiedad {id} no existe");
+        return Results.BadRequest(respuesta);
+    }
+
+    respuesta.Resultado = propiedad;
     respuesta.Success = true;
     respuesta.CodigoDeEstado = HttpStatusCode.OK;
     return Results.Ok(respuesta);
    
-}).WithName("ObtenerPropiedad").Produces<RespuestasAPI>(200).WithOpenApi();
+}).WithName("ObtenerPropiedad").Produces<RespuestasAPI>(200).Produces<RespuestasAPI>(400).WithOpenApi();
 
 //Agregar nueva propiedad -POST- MapPost
 app.MapPost("/api/propiedades", async (ApplicationDbContext _context, IMapper _mapper,
@@ -159,6 +167,10 @@ app.MapDelete("/api/propiedades/{id:int}", async (ApplicationDbContext _context,
 app.UseHttpsRedirection();
 
 app.Run();
+
+
+
+
 
 
 
