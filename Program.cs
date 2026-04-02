@@ -8,8 +8,13 @@ using AutoMapper;
 using FluentValidation;
 using InmobiliariaMinimalAPI.Validaciones;
 using System.Net;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//Configurar conexión a BD
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ConexionSql")));
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
