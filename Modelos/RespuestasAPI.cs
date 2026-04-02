@@ -4,6 +4,10 @@ namespace InmobiliariaMinimalAPI.Modelos;
 
 public class RespuestasAPI
 {
+    public RespuestasAPI()
+    {
+        Errores = new List<string>();
+    }
     public bool Success { get; set; }
     public Object Resultado { get; set; }
     public HttpStatusCode CodigoDeEstado { get; set; }
