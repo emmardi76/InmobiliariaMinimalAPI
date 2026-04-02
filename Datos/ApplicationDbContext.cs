@@ -23,7 +23,7 @@ public class ApplicationDbContext : DbContext
                 Descripcion = "Una hermosa casa ubicada en el centro de la ciudad.",
                 Ubicacion = "Calle Principal 123",
                 Activa = true,
-                FechaCreacion = DateTime.Now
+                FechaCreacion = new DateTime(2026, 4, 2, 13, 50, 0)
             },
             new()
             {
@@ -32,7 +32,7 @@ public class ApplicationDbContext : DbContext
                 Descripcion = "Un moderno apartamento con una vista espectacular al mar.",
                 Ubicacion = "Avenida del Mar 456",
                 Activa = true,
-                FechaCreacion = DateTime.Now
+                FechaCreacion = new DateTime(2026, 4, 2, 13, 50, 0)
             },
             new()
             {
@@ -41,7 +41,7 @@ public class ApplicationDbContext : DbContext
                 Descripcion = "Una encantadora casa de campo rodeada de naturaleza.",
                 Ubicacion = "Camino Rural 789",
                 Activa = false,
-                FechaCreacion = DateTime.Now
+                FechaCreacion = new DateTime(2026, 4, 2, 13, 50, 0)
             },
             new()
             {
@@ -50,7 +50,7 @@ public class ApplicationDbContext : DbContext
                 Descripcion = "Un piso moderno ubicado en una zona residencial tranquila.",
                 Ubicacion = "Barrio Residencial 321",
                 Activa = true,
-                FechaCreacion = DateTime.Now
+                FechaCreacion = new DateTime(2026, 4, 2, 13, 50, 0)
             }
         );       
     }
