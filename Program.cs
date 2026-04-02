@@ -7,6 +7,7 @@ using Scalar.AspNetCore;
 using AutoMapper;
 using FluentValidation;
 using InmobiliariaMinimalAPI.Validaciones;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,66 +35,68 @@ if (app.Environment.IsDevelopment())
 //si fuera un servicio personalizado habría que añadirlo previmente en la sección add services to container)
 //para mostrar un mensaje en la consola cada vez que se accede a esta ruta
 app.MapGet("/api/propiedades", (ILogger<Program> logger) =>
-{ 
+{
+    RespuestasAPI respuesta = new();   
     //usar el logger que ya está como inyección de dependencias
     //para mostrar un mensaje en la consola cada vez que se accede a esta ruta
     logger.LogInformation("Se ha accedido a la ruta /api/propiedades para obtener todas las propiedades.");
-    return Results.Ok(DatosPropiedad.ListaPropiedades);
-}).WithName("ObtenerPropiedades").Produces<IEnumerable<Propiedad>>(200).WithOpenApi();
+
+    respuesta.Resultado = DatosPropiedad.ListaPropiedades;
+    respuesta.Success = true;
+    respuesta.CodigoDeEstado = HttpStatusCode.OK;
+    return Results.Ok(respuesta);
+}).WithName("ObtenerPropiedades").Produces<RespuestasAPI>(200).WithOpenApi();
 
 //Obtener propiedad individual -GET- MapGet
 app.MapGet("/api/propiedades/{id:int}", (int id) =>
 {
-    return Results.Ok(DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.IdPropiedad == id));
-}).WithName("ObtenerPropiedad").Produces<Propiedad>(200).WithOpenApi();
+    RespuestasAPI respuesta = new();
+
+    respuesta.Resultado = DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.IdPropiedad == id);
+    respuesta.Success = true;
+    respuesta.CodigoDeEstado = HttpStatusCode.OK;
+    return Results.Ok(respuesta);
+   
+}).WithName("ObtenerPropiedad").Produces<RespuestasAPI>(200).WithOpenApi();
 
 //Agregar nueva propiedad -POST- MapPost
 app.MapPost("/api/propiedades", async (IMapper _mapper,
     IValidator<CrearPropiedadDTO> _validator, [FromBody] CrearPropiedadDTO crearPropiedadDto) =>
 {
+    RespuestasAPI respuesta = new() { Success = false,CodigoDeEstado = HttpStatusCode.BadRequest};
+
     var resultadoValidaciones = await _validator.ValidateAsync(crearPropiedadDto);
    
     //Validar que el id de propiedad y que el nombre no esté vacio
     if (!resultadoValidaciones.IsValid)
     {
-        return Results.BadRequest(resultadoValidaciones.Errors.FirstOrDefault().ToString());
+        respuesta.Errores.Add(resultadoValidaciones.Errors.FirstOrDefault().ToString());
+        return Results.BadRequest(respuesta);
     }
 
     //Validar si el nombre de la propiedad ya existe en la lista
     if (DatosPropiedad.ListaPropiedades.FirstOrDefault(p => p.Nombre.ToLower() == crearPropiedadDto.Nombre.ToLower()) != null)
     {
-        return Results.BadRequest("El nombre de la propiedad ya existe.");
+        respuesta.Errores.Add("El nombre de la propiedad ya existe.");
+        return Results.BadRequest(respuesta);
     }
-
-    //Propiedad propiedad = new Propiedad
-    //{
-    //    Nombre = crearPropiedadDto.Nombre,
-    //    Descripcion = crearPropiedadDto.Descripcion,
-    //    Ubicacion = crearPropiedadDto.Ubicacion,
-    //    Activa = crearPropiedadDto.Activa
-    //};
-
+     
     Propiedad propiedad = _mapper.Map<Propiedad>(crearPropiedadDto);
 
     propiedad.IdPropiedad = DatosPropiedad.ListaPropiedades.OrderByDescending
     (p => p.IdPropiedad).FirstOrDefault()?.IdPropiedad + 1 ?? 1;
-    DatosPropiedad.ListaPropiedades.Add(propiedad);
-    //return Results.Ok(DatosPropiedad.ListaPropiedades);
-    //return Results.Created($"/api/propiedades/{propiedad.IdPropiedad}", propiedad);
-
-    //PropiedadDTO propiedadDTO = new PropiedadDTO
-    //{
-    //    IdPropiedad = propiedad.IdPropiedad,
-    //    Nombre = propiedad.Nombre,
-    //    Descripcion = propiedad.Descripcion,
-    //    Ubicacion = propiedad.Ubicacion,
-    //    Activa = propiedad.Activa
-    //};
+    DatosPropiedad.ListaPropiedades.Add(propiedad);    
 
     PropiedadDTO propiedadDTO = _mapper.Map<PropiedadDTO>(propiedad);
 
-    return Results.CreatedAtRoute("ObtenerPropiedad", new { id=propiedad.IdPropiedad}, propiedadDTO);
-}).WithName("CrearPropiedad").Accepts<CrearPropiedadDTO>("application/json").Produces<PropiedadDTO>(201).Produces(400).WithOpenApi();
+    //return Results.CreatedAtRoute("ObtenerPropiedad", new { id=propiedad.IdPropiedad}, propiedadDTO);
+
+    respuesta.Resultado = propiedadDTO;
+    respuesta.Success = true;
+    respuesta.CodigoDeEstado = HttpStatusCode.Created;
+    return Results.Ok(respuesta);
+
+}).WithName("CrearPropiedad").Accepts<CrearPropiedadDTO>("application/json").Produces<RespuestasAPI>(201).Produces(400).WithOpenApi();
 
 app.UseHttpsRedirection();
 
